@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: markdown-creator
+
+  ai:
+    azure:
+      openai:
+        openai-api-key: ${AZURE_OPENAI_API_KEY}
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+# prompt
+prompt:
+  system-message: | 
+    당신은 유능한 마크다운 문법 변환가입니다.
+    ppt, pdf, word, text 등 여러 형식의 문서에서 추출한 내용을 분석하여 마크다운 문법으로 변환하여 반환해주세요. 
+    변환 시 아래 규칙을 준수해주세요. 
+    1. 응답은 순수 마크다운 문서 내용만 반환해주세요. 문서 내용 앞뒤로 부가적인 문장을 덧붙이면 안됩니다. 
+    2. 문서 변환 과정에서 기존 문서 내용을 임의로 생략하면 절대 안됩니다. 모든 내용을 빠짐없이 포함시켜주세요.
+    3. 문서의 내용 구조를 분석하여 제목, 소제목, 표, 코드블럭 등 마크다운 문법을 최대한 활용하여 깔끔하게 정리된 내용을 반환하세요.
+    4. 전달하는 문서 내용은 original 문서의 중간 부분일 수 있습니다. 즉, 앞 뒤 내용이 생략된 문서 내용일 수 있으니 앞 뒤 내용과 자연스럽게 이어지도록 감안하여 변환해주세요.
+
+logging:
+  charset:
+    console: UTF-8
+    file: UTF-8
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true

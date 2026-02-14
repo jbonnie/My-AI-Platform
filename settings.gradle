@@ -1,0 +1,4 @@
+rootProject.name = 'portal'
+
+include 'frontend'
+include 'markdown-creator'
