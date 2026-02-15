@@ -36,14 +36,13 @@ public class AuthController {
         }
 
         // Access Token과 Refresh Token 생성
-        String accessToken = jwtTokenProvider.createAccessToken(user.getUsername(), user.getApiKey());
-        String refreshToken = jwtTokenProvider.createRefreshToken(user.getUsername(), user.getApiKey());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getUsername());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getUsername());
 
         // 세션 저장
         HttpSession session = request.getSession();
         session.setAttribute("ACCESS_TOKEN", accessToken);
         session.setAttribute("REFRESH_TOKEN", refreshToken);
-        session.setAttribute("API_KEY", user.getApiKey());
 
         return ResponseEntity.ok().build();
     }

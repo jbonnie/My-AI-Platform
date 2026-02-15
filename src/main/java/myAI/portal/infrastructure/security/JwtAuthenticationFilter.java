@@ -49,10 +49,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Access Token 만료, Refresh Token 유효 - 자동 갱신
                 Claims claims = jwtTokenProvider.getClaimsFromExpiredToken(accessToken);
                 String username = claims.getSubject();
-                String apiKey = claims.get("apiKey", String.class);
 
                 // 새로운 Access Token 발급
-                String newAccessToken = jwtTokenProvider.createAccessToken(username, apiKey);
+                String newAccessToken = jwtTokenProvider.createAccessToken(username);
 
                 // 세션 업데이트
                 if (session != null) {
@@ -73,7 +72,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void setAuthentication(String token) {
         String username = jwtTokenProvider.getUsername(token);
-        String apiKey = jwtTokenProvider.getApiKey(token);
 
         UsernamePasswordAuthenticationToken auth =
                 new UsernamePasswordAuthenticationToken(
@@ -82,7 +80,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         Collections.emptyList()
                 );
 
-        auth.setDetails(apiKey);
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

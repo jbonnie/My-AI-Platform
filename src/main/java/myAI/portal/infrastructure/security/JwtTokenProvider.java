@@ -31,19 +31,18 @@ public class JwtTokenProvider {
     }
 
     // Access Token 생성
-    public String createAccessToken(String username, String apiKey) {
-        return createToken(username, apiKey, accessTokenValidityInMilliseconds);
+    public String createAccessToken(String username) {
+        return createToken(username, accessTokenValidityInMilliseconds);
     }
 
     // Refresh Token 생성
-    public String createRefreshToken(String username, String apiKey) {
-        return createToken(username, apiKey, refreshTokenValidityInMilliseconds);
+    public String createRefreshToken(String username) {
+        return createToken(username, refreshTokenValidityInMilliseconds);
     }
 
     // 토큰 생성 (공통)
-    private String createToken(String username, String apiKey, long validityInMilliseconds) {
+    private String createToken(String username, long validityInMilliseconds) {
         Claims claims = Jwts.claims().setSubject(username).build();
-        claims.put("apiKey", apiKey);
 
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
@@ -59,11 +58,6 @@ public class JwtTokenProvider {
     // 토큰에서 사용자 정보 추출
     public String getUsername(String token) {
         return getClaims(token).getSubject();
-    }
-
-    // 토큰에서 apiKey 추출
-    public String getApiKey(String token) {
-        return getClaims(token).get("apiKey", String.class);
     }
 
     private Claims getClaims(String token) {
