@@ -1,5 +1,6 @@
 package platform.persona.application.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import platform.persona.application.domain.Persona;
@@ -8,6 +9,7 @@ import platform.persona.application.port.out.RegisterPersonaPort;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class RegisterPersonaService implements RegisterPersonaUseCase {
 
     private final RegisterPersonaPort registerPersonaPort;

@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import platform.persona.adapter.in.dto.RegisterPersonaRequestDto;
+import platform.persona.adapter.in.dto.UpdatePersonaRequestDto;
 import platform.persona.application.domain.Persona;
 import platform.persona.application.port.in.FindPersonaUseCase;
 import platform.persona.application.port.in.RegisterPersonaUseCase;
+import platform.persona.application.port.in.UpdatePersonaUseCase;
 
 import java.util.List;
 
@@ -17,6 +19,7 @@ public class ManagePersonaController {
 
     private final FindPersonaUseCase findPersonaUseCase;
     private final RegisterPersonaUseCase registerPersonaUseCase;
+    private final UpdatePersonaUseCase updatePersonaUseCase;
 
     // 페르소나 목록 조회
     @GetMapping
@@ -33,6 +36,11 @@ public class ManagePersonaController {
     }
 
     // 페르소나 수정
+    @PutMapping("/edit/{id}")
+    public ResponseEntity<Persona> update(@PathVariable Long id, @RequestBody UpdatePersonaRequestDto requestDto) {
+        Persona updated = updatePersonaUseCase.execute(requestDto.toEntity());
+        return ResponseEntity.ok().body(updated);
+    }
 
     // 페르소나 삭제
 }

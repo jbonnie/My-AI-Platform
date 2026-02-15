@@ -1,6 +1,7 @@
 package platform.persona.application.domain;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Persona {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,10 +22,15 @@ public class Persona {
     @Column(columnDefinition = "LONGTEXT")
     private String content;
 
-    @Builder
-    public Persona(String name, String description, String content) {
-        this.name = name;
-        this.description = description;
-        this.content = content;
+    public void update(String name, String description, String content) {
+        if(name != null && !name.isEmpty()) {
+            this.name = name;
+        }
+        if(description != null && !description.isEmpty()) {
+            this.description = description;
+        }
+        if(content != null && !content.isEmpty()) {
+            this.content = content;
+        }
     }
 }
