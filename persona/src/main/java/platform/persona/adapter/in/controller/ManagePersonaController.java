@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import platform.persona.adapter.in.dto.RegisterPersonaRequestDto;
 import platform.persona.adapter.in.dto.UpdatePersonaRequestDto;
 import platform.persona.application.domain.Persona;
+import platform.persona.application.port.in.DeletePersonaUseCase;
 import platform.persona.application.port.in.FindPersonaUseCase;
 import platform.persona.application.port.in.RegisterPersonaUseCase;
 import platform.persona.application.port.in.UpdatePersonaUseCase;
@@ -20,6 +21,7 @@ public class ManagePersonaController {
     private final FindPersonaUseCase findPersonaUseCase;
     private final RegisterPersonaUseCase registerPersonaUseCase;
     private final UpdatePersonaUseCase updatePersonaUseCase;
+    private final DeletePersonaUseCase deletePersonaUseCase;
 
     // 페르소나 목록 조회
     @GetMapping
@@ -43,4 +45,9 @@ public class ManagePersonaController {
     }
 
     // 페르소나 삭제
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        deletePersonaUseCase.execute(id);
+        return ResponseEntity.ok().build();
+    }
 }
