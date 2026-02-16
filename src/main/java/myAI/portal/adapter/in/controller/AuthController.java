@@ -64,10 +64,15 @@ public class AuthController {
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setMaxAge((int)(refreshTokenValidityInMilliseconds/1000));
 
+        Cookie usernameCookie = new Cookie("username", user.getUsername());
+        usernameCookie.setPath("/");
+        usernameCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
+
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
+        response.addCookie(usernameCookie);
 
-        return ResponseEntity.ok().body("환영합니다, " + user.getUsername() + "님!");
+        return ResponseEntity.ok().body("안녕하세요, " + user.getUsername() + "님!");
     }
 
     @PostMapping("/signup")
@@ -92,8 +97,13 @@ public class AuthController {
         refreshTokenCookie.setMaxAge(0);
         refreshTokenCookie.setPath("/");
 
+        Cookie usernameCookie = new Cookie("username", null);
+        usernameCookie.setMaxAge(0);
+        usernameCookie.setPath("/");
+
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
+        response.addCookie(usernameCookie);
 
         SecurityContextHolder.clearContext();
 
@@ -121,8 +131,13 @@ public class AuthController {
         refreshTokenCookie.setMaxAge(0);
         refreshTokenCookie.setPath("/");
 
+        Cookie usernameCookie = new Cookie("username", null);
+        usernameCookie.setMaxAge(0);
+        usernameCookie.setPath("/");
+
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
+        response.addCookie(usernameCookie);
 
         SecurityContextHolder.clearContext();
 
