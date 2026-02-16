@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { convertDocuments } from '../apis/convertDocuments'
-import type { ConvertDocumentsResponse } from '../types/document'
+import type { ConvertDocumentsResponseDto } from '../types/document'
 
 interface UseConvertDocumentsReturn {
-  documents: ConvertDocumentsResponse | null
+  documents: ConvertDocumentsResponseDto | null
   isConverting: boolean
   convertError: string | null
   convert: () => Promise<void>
@@ -11,7 +11,7 @@ interface UseConvertDocumentsReturn {
 }
 
 export const useConvertDocuments = (files: File[]): UseConvertDocumentsReturn => {
-  const [documents, setDocuments] = useState<ConvertDocumentsResponse | null>(null)
+  const [documents, setDocuments] = useState<ConvertDocumentsResponseDto | null>(null)
   const [isConverting, setIsConverting] = useState(false)
   const [convertError, setConvertError] = useState<string | null>(null)
 

@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { downloadDocuments } from '../apis/downloadDocuments'
-import type { ConvertDocumentsResponse } from '../types/document'
+import type { ConvertDocumentsResponseDto } from '../types/document'
 
 interface UseDownloadDocumentsReturn {
   isDownloading: boolean
   downloadError: string | null
-  download: (documents: ConvertDocumentsResponse) => Promise<void>
+  download: (documents: ConvertDocumentsResponseDto) => Promise<void>
 }
 
 export const useDownloadDocuments = (): UseDownloadDocumentsReturn => {
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
 
-  const download = async (documents: ConvertDocumentsResponse) => {
+  const download = async (documents: ConvertDocumentsResponseDto) => {
     if (documents.length === 0) {
       setDownloadError('다운로드할 문서가 없습니다.')
       return

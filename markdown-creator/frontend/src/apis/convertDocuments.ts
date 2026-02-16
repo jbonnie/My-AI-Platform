@@ -1,16 +1,16 @@
 import axios from 'axios'
-import type { ConvertDocumentsResponse } from '../types/document'
+import type { ConvertDocumentsResponseDto } from '../types/document'
 
 const API_BASE_URL = import.meta.env.API_BASE_URL || 'http://localhost:8081'
 
-export const convertDocuments = async (files: File[]): Promise<ConvertDocumentsResponse> => {
+export const convertDocuments = async (files: File[]): Promise<ConvertDocumentsResponseDto> => {
   const formData = new FormData()
 
   files.forEach((file) => {
     formData.append('files', file)
   })
 
-  const response = await axios.post<ConvertDocumentsResponse>(
+  const response = await axios.post<ConvertDocumentsResponseDto>(
     `${API_BASE_URL}/api/v1/convert`,
     formData,
     {

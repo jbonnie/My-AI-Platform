@@ -5,12 +5,4 @@ export interface MarkdownDocument {
   content: string
 }
 
-export type ConvertDocumentsResponse = MarkdownDocument[]
-
-/* 문서 다운로드 */
-export interface DownloadDocument {
-  fileName: string
-  content: string
-}
-
-export type DownloadDocumentsRequest = DownloadDocument[]
+export type ConvertDocumentsResponseDto = MarkdownDocument[]
