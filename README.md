@@ -14,6 +14,7 @@ AI 서비스들을 하나의 플랫폼에서 통합 관리하는 포털 서비�
 My AI Platform은 다양한 AI 기반 서비스를 하나의 통합 플랫폼에서 제공하는 포털입니다.
 사용자는 한 번의 로그인으로 여러 AI 서비스를 자유롭게 이용할 수 있으며,
 각 서비스는 독립적으로 운영되면서도 사용자 인증 정보를 공유합니다.
+
 #### # 현재 제공 서비스
 1. Markdown Creator
 2. Persona AI
@@ -23,7 +24,7 @@ My AI Platform은 다양한 AI 기반 서비스를 하나의 통합 플랫폼에
 ### 🔐 중앙 집중식 인증 시스템
 - **JWT 기반 인증**: 포털에서 한 번 로그인하면 모든 하위 서비스 이용 가능
 - **API Key 통합 관리**: 회원가입 시 사용자의 AI API Key를 등록하여 모든 서비스에서 공유
-- **세션 기반 토큰 관리**: Access Token과 Refresh Token을 세션에 저장하여 안전하게 관리
+- **iframe + postMessage 기반 SSO**: 쿠키에 저장된 토큰을 iframe으로 각 서비스에 전달
 - **자동 토큰 갱신**: Access Token 만료 시 Refresh Token을 통해 자동으로 갱신
 
 ### 📝 Markdown Creator
@@ -70,48 +71,148 @@ My AI Platform (Portal)
 ├── Markdown Creator (Service Module)
 │   ├── 포트: 8081
 │   ├── 역할: 문서 → 마크다운 변환
-│   └── 인증: 포털 JWT 토큰 검증
+│   └── 인증: 포털에서 postMessage로 전달받은 JWT 토큰 검증
 │
 └── Persona AI (Service Module)
     ├── 포트: 8082
     ├── 역할: AI 캐릭터 학습 및 채팅
-    └── 인증: 포털 JWT 토큰 검증
+    └── 인증: 포털에서 postMessage로 전달받은 JWT 토큰 검증
 ```
 
 ### 멀티모듈 구조
 ```
-myAI-platform/
-├── portal/              # 포털 모듈 (인증, 사용자 관리)
+portal/                  # MY AI 포털 (인증, 사용자 관리)
 ├── markdown-creator/    # Markdown Creator 서비스
-├── persona-ai/          # Persona AI 서비스
-└── common/              # 공통 모듈 (JWT, Security 설정 등)
+└── persona/             # Persona AI 서비스
 ```
+
+## 🔐 SSO 인증 방식
+
+본 프로젝트는 **iframe + postMessage API**를 활용한 SSO(Single Sign-On)를 구현합니다.
+
+### 인증 흐름
+```
+1. 포털(8080)에서 로그인
+   ↓
+2. JWT Access Token, Refresh Token 발급
+   ↓
+3. 토큰을 포털의 쿠키에 저장 (HttpOnly)
+   ↓
+4. 사용자가 메뉴 클릭 (예: Markdown Creator)
+   ↓
+5. 포털이 해당 서비스를 iframe으로 로드
+   ↓
+6. iframe 로드 완료 시 postMessage로 토큰 전달
+   window.postMessage({
+     type: 'AUTH_TOKEN',
+     accessToken: '...',
+     refreshToken: '...',
+   }, 'http://localhost:8081')
+   ↓
+7. 각 서비스(8081, 8082)가 메시지 수신
+   window.addEventListener('message', ...)
+   ↓
+8. 받은 토큰을 자신의 쿠키에 저장
+   ↓
+9. 이후 API 호출 시 저장된 토큰 사용
+   Authorization: Bearer {accessToken}
+```
+
+### 포털 측 구현 (토큰 전달)
+```typescript
+// 포털 메인 페이지
+function showService(serviceId: string) {
+  const iframe = document.getElementById(serviceId) as HTMLIFrameElement;
+  
+  if (iframe) {
+    iframe.onload = function() {
+      const message = {
+        type: 'AUTH_TOKEN',
+        accessToken: getCookie('accessToken'),
+        refreshToken: getCookie('refreshToken')
+      };
+      
+      // iframe에 postMessage로 토큰 전달
+      iframe.contentWindow?.postMessage(message, iframe.src);
+    };
+  }
+}
+```
+
+### 서비스 측 구현 (토큰 수신)
+```typescript
+// 각 서비스 (8081, 8082)
+window.addEventListener('message', function(event) {
+  // ✅ 보안: 포털에서만 메시지 수신
+  if (event.origin !== 'http://localhost:8080') {
+    return;
+  }
+  
+  if (event.data.type === 'AUTH_TOKEN') {
+    // 받은 토큰을 자신의 쿠키에 저장
+    document.cookie = `accessToken=${event.data.accessToken}; path=/; max-age=3600`;
+    document.cookie = `refreshToken=${event.data.refreshToken}; path=/; max-age=604800`;
+    
+    // 인증 완료 처리
+    initializeService();
+  }
+});
+```
+
+### 주요 특징
+
+✅ **크로스 도메인 인증**: 포트가 다른 서비스 간에도 토큰 공유 가능  
+✅ **보안**: origin 검증으로 신뢰할 수 있는 출처만 허용  
+✅ **추가 인프라 불필요**: Redis 등 별도 세션 저장소 없이 구현  
+✅ **투명한 SSO**: 사용자는 한 번 로그인 후 모든 서비스 자유롭게 이용
+
+### 보안 고려사항
+
+⚠️ **origin 검증 필수**: 메시지 수신 시 반드시 출처 확인
+```typescript
+if (event.origin !== 'http://localhost:8080') {
+  return; // 차단
+}
+```
+
+⚠️ **HttpOnly 쿠키**: 포털의 토큰은 HttpOnly 쿠키로 저장하여 XSS 공격 방지
+
+⚠️ **HTTPS 필수**: 프로덕션 환경에서는 반드시 HTTPS 사용
 
 ## 🛠 기술 스택
 
 ### Backend
-- **Spring Boot 3.x**: 기반 프레임워크
+- **Spring Boot 3.5.5**: 기반 프레임워크
 - **Spring Security**: 보안 및 인증
 - **JWT (JSON Web Token)**: 토큰 기반 인증
 - **JPA/Hibernate**: 데이터베이스 ORM
 - **H2/MySQL**: 데이터베이스
 
+### Frontend
+- **React 18**: UI 라이브러리
+- **TypeScript**: 타입 안정성
+- **Vite**: 빌드 도구
+- **React Router**: 라우팅
+
 ### 인증 방식
 - **JWT Access Token**: 1시간 유효
 - **JWT Refresh Token**: 7일 유효
-- **세션 기반 토큰 저장**: 서버 측 세션에 토큰 저장
+- **쿠키 기반 토큰 저장**: HttpOnly 쿠키에 토큰 저장
+- **iframe + postMessage**: 서비스 간 토큰 전달
 - **자동 갱신**: Access Token 만료 시 자동으로 새 토큰 발급
 
 ### 보안
 - **BCrypt**: 비밀번호 암호화
 - **HTTPS**: 프로덕션 환경 통신 암호화
 - **CORS**: Cross-Origin 요청 제어
+- **Origin 검증**: postMessage 수신 시 출처 확인
 
 ## 🚀 시작하기
 
 ### 사전 요구사항
 - JDK 24 이상
 - Gradle 7.x 이상
+- Node.js 18 이상
 - AI API Key (OpenAI, Anthropic 등)
 
 ### 설치 및 실행
@@ -124,21 +225,33 @@ cd myAI-platform
 
 2. **환경변수 설정**
 - src/main/resource 하위에 .env 파일 생성 필요
-```
+```env
 JWT_SECRET=your-secret-key-at-least-256-bits-long
 ```
 
-3. **프론트엔드 실행**
+3. **백엔드 실행**
+```bash
+# 포털 실행 (8080)
+./gradlew :portal:bootRun
+
+# Markdown Creator 실행 (8081)
+./gradlew :markdown-creator:bootRun
+
+# Persona AI 실행 (8082)
+./gradlew :persona:bootRun
+```
+
+4. **프론트엔드 실행**
 ```bash
 cd ./frontend
 npm install
 npm run dev
 ```
 
-4. **접속**
+5. **접속**
 - 포털: http://localhost:8080
-- Markdown Creator: http://localhost:8081
-- Persona AI: http://localhost:8082
+- Markdown Creator: http://localhost:8081 (포털 iframe 내부)
+- Persona AI: http://localhost:8082 (포털 iframe 내부)
 
 ### 서비스 API 인증
 
@@ -157,13 +270,19 @@ Authorization: Bearer {accessToken}
 ### 토큰 관리
 - Access Token: 짧은 유효기간(1시간)으로 보안 강화
 - Refresh Token: 긴 유효기간(7일)으로 사용자 편의성 제공
-- 토큰은 세션에 저장되어 페이지 이동 시에도 유지
-- 로그아웃 시 세션 무효화로 즉시 접근 차단
+- 포털 토큰은 HttpOnly 쿠키에 저장하여 XSS 공격 방지
+- 각 서비스는 postMessage로 받은 토큰을 자신의 쿠키에 저장
+- 로그아웃 시 모든 쿠키 삭제로 즉시 접근 차단
 
 ### 비밀번호
 - BCrypt 암호화 적용
 - 최소 8자 이상 권장
 - 회원탈퇴 시 비밀번호 재확인 필수
+
+### postMessage 보안
+- origin 검증으로 신뢰할 수 있는 출처만 메시지 수신
+- 타입 체크로 예상된 메시지 형식만 처리
+- 프로덕션 환경에서는 HTTPS 필수
 
 ## 🎯 활용 시나리오
 
