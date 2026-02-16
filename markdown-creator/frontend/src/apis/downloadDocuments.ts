@@ -6,7 +6,7 @@ interface DownloadResponse {
   fileName: string | null
 }
 
-const API_BASE_URL = import.meta.env.API_BASE_URL || 'http://localhost:8080'
+const API_BASE_URL = import.meta.env.API_BASE_URL || 'http://localhost:8081'
 
 export const downloadDocuments = async (documents: ConvertDocumentsResponse): Promise<DownloadResponse> => {
   const requestBody = documents.map(doc => ({
