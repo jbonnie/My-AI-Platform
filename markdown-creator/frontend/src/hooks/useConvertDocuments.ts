@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { convertDocuments } from '../apis/convertDocuments'
 import type { ConvertDocumentsResponse } from '../types/document'
-import { ApiException } from '../types/api'
 
 interface UseConvertDocumentsReturn {
   documents: ConvertDocumentsResponse | null
@@ -30,9 +29,7 @@ export const useConvertDocuments = (files: File[]): UseConvertDocumentsReturn =>
       setDocuments(result)
       console.log('변환 성공:', result)
     } catch (err) {
-      if (err instanceof ApiException) {
-        setConvertError(`변환 실패: ${err.message} (${err.status})`)
-      } else if (err instanceof Error) {
+      if (err instanceof Error) {
         setConvertError(`변환 실패: ${err.message}`)
       } else {
         setConvertError('문서 변환 중 알 수 없는 오류가 발생했습니다.')

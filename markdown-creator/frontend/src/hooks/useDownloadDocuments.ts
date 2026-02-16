@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { downloadDocuments } from '../apis/downloadDocuments'
 import type { ConvertDocumentsResponse } from '../types/document'
-import { ApiException } from '../types/api'
 
 interface UseDownloadDocumentsReturn {
   isDownloading: boolean
@@ -52,9 +51,7 @@ export const useDownloadDocuments = (): UseDownloadDocumentsReturn => {
       console.log('다운로드 성공:', fileName)
     } catch (err) {
       console.error('다운로드 에러 상세:', err)
-      if (err instanceof ApiException) {
-        setDownloadError(`다운로드 실패: ${err.message}`)
-      } else if (err instanceof Error) {
+      if (err instanceof Error) {
         setDownloadError(`다운로드 실패: ${err.message}`)
       } else {
         setDownloadError('문서 다운로드 중 알 수 없는 오류가 발생했습니다.')
