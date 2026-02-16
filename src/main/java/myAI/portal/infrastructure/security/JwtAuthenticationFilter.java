@@ -3,6 +3,7 @@ package myAI.portal.infrastructure.security;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -26,48 +27,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
-        String accessToken = null;
-        String refreshToken = null;
+        String token = null;
 
-        // 1. 헤더에서 토큰 추출 시도
-        accessToken = jwtTokenProvider.getToken(request);
+        // 1. 헤더에서 토큰 추출 시도 (API 호출용)
+        token = jwtTokenProvider.getToken(request);
 
-        // 2. 헤더에 없으면 세션에서 가져오기
-        if (accessToken == null && session != null) {
-            accessToken = (String) session.getAttribute("ACCESS_TOKEN");
-            refreshToken = (String) session.getAttribute("REFRESH_TOKEN");
+        // 2. 헤더에 없으면 쿠키에서 가져오기 (브라우저 접근용)
+        if (token == null) {
+            token = getTokenFromCookie(request, "accessToken");
         }
 
-        // 3. Access Token 검증
-        if (accessToken != null) {
-            if (jwtTokenProvider.validateToken(accessToken)) {
-                // 유효한 토큰 - 인증 설정
-                setAuthentication(accessToken);
-            }
-            else if (refreshToken != null && jwtTokenProvider.validateToken(refreshToken)) {
-                // Access Token 만료, Refresh Token 유효 - 자동 갱신
-                Claims claims = jwtTokenProvider.getClaimsFromExpiredToken(accessToken);
-                String username = claims.getSubject();
-
-                // 새로운 Access Token 발급
-                String newAccessToken = jwtTokenProvider.createAccessToken(username);
-
-                // 세션 업데이트
-                if (session != null) {
-                    session.setAttribute("ACCESS_TOKEN", newAccessToken);
-                }
-
-                // 응답 헤더에 새 토큰 추가 (프론트엔드가 업데이트할 수 있도록)
-                response.setHeader("New-Access-Token", newAccessToken);
-
-                // 인증 설정
-                setAuthentication(newAccessToken);
-            }
-            // 둘 다 만료되면 인증 실패 (로그인 필요)
+        // 3. 토큰 검증 및 Authentication 설정
+        if (token != null && jwtTokenProvider.validateToken(token)) {
+            setAuthentication(token);
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String getTokenFromCookie(HttpServletRequest request, String cookieName) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookieName.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 
     private void setAuthentication(String token) {

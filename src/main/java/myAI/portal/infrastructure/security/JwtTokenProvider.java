@@ -85,16 +85,6 @@ public class JwtTokenProvider {
         }
     }
 
-    // 토큰 만료 여부 확인
-    public boolean isTokenExpired(String token) {
-        try {
-            Date expiration = getClaims(token).getExpiration();
-            return expiration.before(new Date());
-        } catch (ExpiredJwtException e) {
-            return true;
-        }
-    }
-
     // 만료된 토큰에서도 정보 추출 (Refresh 시 필요)
     public Claims getClaimsFromExpiredToken(String token) {
         try {

@@ -2,6 +2,8 @@ package myAI.portal.application.port.in;
 
 import myAI.portal.application.domain.entity.User;
 
+import java.util.Optional;
+
 public interface FindUserUseCase {
-    User findByUsername(String username);
+    Optional<User> findByUsername(String username);
 }

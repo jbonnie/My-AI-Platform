@@ -6,6 +6,8 @@ import myAI.portal.application.port.in.FindUserUseCase;
 import myAI.portal.application.port.out.FindUserPort;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class FindUserService implements FindUserUseCase {
@@ -13,8 +15,7 @@ public class FindUserService implements FindUserUseCase {
     private final FindUserPort findUserPort;
 
     @Override
-    public User findByUsername(String username) {
-        return findUserPort.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public Optional<User> findByUsername(String username) {
+        return findUserPort.findByUsername(username);
     }
 }
