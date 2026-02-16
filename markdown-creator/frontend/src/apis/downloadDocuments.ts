@@ -1,14 +1,9 @@
 import axios from 'axios'
-import type { ConvertDocumentsResponseDto } from '../types/document'
-
-interface DownloadResponse {
-  blob: Blob
-  fileName: string | null
-}
+import type { ConvertDocumentsResponseDto, DownloadResponseDto } from '../types/document'
 
 const API_BASE_URL = import.meta.env.API_BASE_URL || 'http://localhost:8081'
 
-export const downloadDocuments = async (documents: ConvertDocumentsResponseDto): Promise<DownloadResponse> => {
+export const downloadDocuments = async (documents: ConvertDocumentsResponseDto): Promise<DownloadResponseDto> => {
   const requestBody = documents.map(doc => ({
     fileName: doc.fileName,
     content: doc.content
