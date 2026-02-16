@@ -87,7 +87,13 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
+    public ResponseEntity<?> logout(HttpServletResponse response,
+                                    Authentication authentication) {
+        // 현재 로그인한 사용자 정보
+        String username = authentication.getName();
+        User user = findUserUseCase.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("등록되지 않은 사용자입니다."));
+
         // 쿠키 삭제
         Cookie accessTokenCookie = new Cookie("accessToken", null);
         accessTokenCookie.setMaxAge(0);
